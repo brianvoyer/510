@@ -1,0 +1,44 @@
+#N canvas 341 413 660 222 10;
+#X obj 12 27 forte 1 2035 697 8t4e;
+#X floatatom 12 45 5 0 0 0 - - -;
+#X floatatom 42 45 5 0 0 0 - - -;
+#X floatatom 73 45 5 0 0 0 - - -;
+#X floatatom 104 45 5 0 0 0 - - -;
+#X floatatom 135 44 5 0 0 0 - - -;
+#X floatatom 12 10 5 0 0 0 - - -;
+#X msg 192 10 root C#;
+#X msg 143 10 root C;
+#X floatatom 12 121 5 0 0 0 - - -;
+#X floatatom 42 121 5 0 0 0 - - -;
+#X floatatom 73 121 5 0 0 0 - - -;
+#X floatatom 104 121 5 0 0 0 - - -;
+#X floatatom 135 120 5 0 0 0 - - -;
+#X floatatom 12 86 5 0 0 0 - - -;
+#X msg 137 86 root C;
+#X obj 12 103 forte 1 2035 697 8t4;
+#X msg 185 86 root bb;
+#X text 281 6 [forte] v.1 for Pd by Brian Voyer <brianvoyer@gmail.com>
+Route pitch data based on pitch class (PC) and root. Select pitch sets
+\, e.g. \, 12 345 6789 te \, and a root note e.g. \, Db to organize
+data into. [forte] routes all pitches of that PC into the corresponding
+outlet. PCs not specified in the creation arguments are sent to the
+last outlet. 0 corresponds to the root specified (defaults to C) \,
+1 corresponds to a semitone above the root \, and so on. 't' is 10
+\, and 'e' is 11 NOTE: "0" cannot be the first number in any argument
+\, PD treats it as an integer then and omits the 0;
+#X connect 0 0 1 0;
+#X connect 0 1 2 0;
+#X connect 0 2 3 0;
+#X connect 0 3 4 0;
+#X connect 0 4 5 0;
+#X connect 6 0 0 0;
+#X connect 7 0 0 0;
+#X connect 8 0 0 0;
+#X connect 14 0 16 0;
+#X connect 15 0 16 0;
+#X connect 16 0 9 0;
+#X connect 16 1 10 0;
+#X connect 16 2 11 0;
+#X connect 16 3 12 0;
+#X connect 16 4 13 0;
+#X connect 17 0 16 0;
