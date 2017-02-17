@@ -1,0 +1,14 @@
+#N canvas 315 340 450 300 10;
+#X obj 158 153 dac~;
+#X text 253 97 ayyy lmao;
+#X text 208 214 I'm sorry for the comments;
+#X text 221 235 I'm really tired;
+#X obj 197 97 osc~ 420;
+#X obj 158 118 ringin~;
+#X obj 157 77 osc~ 0.36;
+#X text 216 77 0 no scope;
+#X text 209 179 [ringin~] does ring modulation;
+#X connect 4 0 5 1;
+#X connect 5 0 0 0;
+#X connect 5 0 0 1;
+#X connect 6 0 5 0;
