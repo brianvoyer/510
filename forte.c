@@ -16,7 +16,7 @@
 #include "m_pd.h"
 #include <string.h>
 
-static char *version = "[forte] v.1 by Brian Voyer <brianvoyer@gmail.com>";
+static char *version = "[forte] v.1.1 by Brian Voyer <brianvoyer@gmail.com>";
 
 static t_class *forte_class;
 
@@ -35,7 +35,7 @@ void forte_float(t_forte *x, t_floatarg f)
   int index = ((int)f + 12 - x->root) % 12;
   if(index < 12 && index > -1)
     {
-      post("PC %d goes to outlet %d", index, x->pcs[index]);
+      //post("PC %d goes to outlet %d", index, x->pcs[index]);
       outlet_float(x->outlet[x->pcs[index]], f);
     }  
   else
