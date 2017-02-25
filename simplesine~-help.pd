@@ -1,0 +1,10 @@
+#N canvas 803 331 450 300 10;
+#X obj 71 168 dac~;
+#X obj 76 121 simplesine~ triangle;
+#X floatatom 121 79 5 0 0 0 - - -;
+#X msg 76 86 440;
+#X connect 1 0 0 0;
+#X connect 1 0 0 1;
+#X connect 2 0 1 0;
+#X connect 3 0 1 0;
+#X connect 3 0 2 0;
