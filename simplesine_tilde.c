@@ -34,6 +34,10 @@ typedef struct _simplesine
   int xfade_countdown;
   // only implement one crossfade for simplicity
 
+  // delay line stuff
+  float fbamp;
+  int fbtime;
+
 } t_simplesine;
 
 void tableswitch(t_simplesine *x)
@@ -193,6 +197,53 @@ void sineadd(t_simplesine *x, int harmonic, float amp)
     }
 }
 
+void sawtoothadd(t_simplesine *x, int harmonic, float amp)
+{
+  for(int i = 0; i < x->table_length; i++)
+    {
+      float saw = 0;
+      saw = harmonic * fmod( (double)i, x->table_length / harmonic) /
+        (float)x->table_length;
+      //post("%f", saw);
+      // - 0.25 to remove the native DC offset
+      x->wavetable[i] += amp * saw - 0.25;
+    }
+}
+
+void triangleadd(t_simplesine *x, int harmonic, float amp)
+{
+  float period = (float)x->table_length / pow(2, harmonic);
+  for(int i = 0; i < x->table_length; i++)
+    {
+      float permod = fmod(i, 2 * period);
+      float tri = 0;
+      if(permod < period)
+        {
+          tri = (2 * permod) / period - 1;
+        }
+      else
+        {
+          tri = 1 - 2*(permod - period) / period;
+        }
+      x->wavetable[i] += amp * tri;// - 0.25;
+    }
+}
+// UUT
+void squareadd(t_simplesine *x, int harmonic, float amp)
+{
+  float period = (float)x->table_length / pow(2, harmonic);
+  for(int i = 0; i < x->table_length; i++)
+    {
+      float permod = fmod(i, 2 * period);
+      float sqr = -1.0;
+      if(permod > period)
+        {
+          sqr = 1.0;
+        }
+      x->wavetable[i] += amp * sqr;
+    }
+}
+
 void *simplesine_new(t_symbol *s, int argc, t_atom *argv)
 {
   float init_freq;
@@ -212,7 +263,7 @@ void *simplesine_new(t_symbol *s, int argc, t_atom *argv)
 
   x->dirty = 0;
   x->xfade_countdown = 0;
-  x->xfade_duration = 100.;
+  x->xfade_duration = 500.;
   x->xfade_samples = x->xfade_duration * x->sr / 1000.0;
 
   x->waveform = atom_getsymbolarg(0, argc, argv);
@@ -247,7 +298,6 @@ void *simplesine_new(t_symbol *s, int argc, t_atom *argv)
 
 void simplesine_build_waveform(t_simplesine *x)
 {
-  // build waveform only uses sines
   float rescale;
   int i;
   float max;
@@ -271,23 +321,30 @@ void simplesine_build_waveform(t_simplesine *x)
       error("All zero function, waveform not created");
       return;
     }
-
-  // for(i = 0; i < MAXAMPS; i++)
-  //   {
-  //     if(amplitudes[i])
-  //     post("%d: %f", i, amplitudes[i]);
-  //   }
-
-  tableswitch(x);
-
   for(i = 0; i < table_length; i++)
     {
       wavetable[i] = amplitudes[0];
     }
   for(i = 1; i < partial_count; i++)
     {
-      sineadd(x, i, amplitudes[i]);
+      if(x->waveform == gensym("sin"))
+        {
+          sineadd(x, i, amplitudes[i]);
+        }
+      else if(x->waveform == gensym("tri"))
+        {
+          triangleadd(x, i, amplitudes[i]);
+        }
+      else if(x->waveform == gensym("sqr"))
+        {
+          squareadd(x, i, amplitudes[i]);
+        }
+      else if(x->waveform == gensym("saw"))
+        {
+          sawtoothadd(x, i, amplitudes[i]);
+        }
     }
+
   max = 0.0;
   for(i = 0; i < (int)(table_length * 0.5); i++)
     {
@@ -313,6 +370,8 @@ void simplesine_build_waveform(t_simplesine *x)
 void simplesine_list(t_simplesine *x, t_symbol *msg, short argc,
                      t_atom *argv)
 {
+  post("No waveform given, default to sine...");
+  tableswitch(x);
   short i;
   int harmonic_count = 0;
   float *amplitudes = x->amplitudes;
@@ -325,7 +384,101 @@ void simplesine_list(t_simplesine *x, t_symbol *msg, short argc,
       amplitudes[harmonic_count++] = atom_getfloat(argv + i);
     }
   x->harmonic_count = harmonic_count;
+  x->waveform = gensym("sin");
   simplesine_build_waveform(x);
+}
+
+void simplesine_sin(t_simplesine *x, t_symbol *msg, short argc,
+                    t_atom *argv)
+{
+  tableswitch(x);
+  short i;
+  int harmonic_count = 0;
+  float *amplitudes = x->amplitudes;
+  for(i = 0; i < MAXAMPS; i++)
+    {
+      amplitudes[i] = 0;
+    }
+  for(i = 0; i < argc; i++)
+    {
+      amplitudes[harmonic_count++] = atom_getfloat(argv + i);
+    }
+  x->harmonic_count = harmonic_count;
+  x->waveform = gensym("sin");
+  simplesine_build_waveform(x);
+}
+
+void simplesine_tri(t_simplesine *x, t_symbol *msg, short argc,
+                    t_atom *argv)
+{
+  tableswitch(x);
+  short i;
+  int harmonic_count = 0;
+  float *amplitudes = x->amplitudes;
+  for(i = 0; i < MAXAMPS; i++)
+    {
+      amplitudes[i] = 0;
+    }
+  for(i = 0; i < argc; i++)
+    {
+      amplitudes[harmonic_count++] = atom_getfloat(argv + i);
+    }
+  x->harmonic_count = harmonic_count;
+  x->waveform = gensym("tri");
+  simplesine_build_waveform(x);
+}
+
+void simplesine_saw(t_simplesine *x, t_symbol *msg, short argc,
+                    t_atom *argv)
+{
+  tableswitch(x);
+  short i;
+  int harmonic_count = 0;
+  float *amplitudes = x->amplitudes;
+  for(i = 0; i < MAXAMPS; i++)
+    {
+      amplitudes[i] = 0;
+    }
+  for(i = 0; i < argc; i++)
+    {
+      amplitudes[harmonic_count++] = atom_getfloat(argv + i);
+    }
+  x->harmonic_count = harmonic_count;
+  x->waveform = gensym("saw");
+  simplesine_build_waveform(x);
+}
+
+void simplesine_sqr(t_simplesine *x, t_symbol *msg, short argc,
+                    t_atom *argv)
+{
+  tableswitch(x);
+  short i;
+  int harmonic_count = 0;
+  float *amplitudes = x->amplitudes;
+  for(i = 0; i < MAXAMPS; i++)
+    {
+      amplitudes[i] = 0;
+    }
+  for(i = 0; i < argc; i++)
+    {
+      amplitudes[harmonic_count++] = atom_getfloat(argv + i);
+    }
+  x->harmonic_count = harmonic_count;
+  x->waveform = gensym("sqr");
+  simplesine_build_waveform(x);
+}
+
+// prepare for the feedback method
+void simplesine_fbamp(t_simplesine *x, t_symbol *msg, short argc,
+                      t_atom *argv)
+{
+
+}
+
+void simplesine_fbtime(t_simplesine *x, t_symbol *msg, short argc,
+                       t_atom *argv)
+{
+
 }
 
 t_int *simplesine_perform(t_int *w)
@@ -349,21 +502,21 @@ t_int *simplesine_perform(t_int *w)
       iphase = floor(phase); //truncate phase
 
       if(x->xfade_countdown)
-	{
-	  float fraction = 0.25 * TWOPI * (float)x->xfade_countdown / 
-	    (float)x->xfade_samples;
-	  *out++ = sin(fraction) * old_wavetable[iphase] + cos(fraction) * 
-	    wavetable[iphase];
-	  --x->xfade_countdown;
-	}
+        {
+          float fraction = 0.25 * TWOPI * (float)x->xfade_countdown /
+            (float)x->xfade_samples;
+          *out++ = sin(fraction) * old_wavetable[iphase] + cos(fraction) *
+            wavetable[iphase];
+          --x->xfade_countdown;
+        }
       else if(x->dirty)
-	{
-	  *out++ = old_wavetable[iphase];
-	}
+        {
+          *out++ = old_wavetable[iphase];
+        }
       else
-	{
-	  *out++ = wavetable[iphase];
-	}
+        {
+          *out++ = wavetable[iphase];
+        }
       phase += si;
 
       while(phase >= table_length)
@@ -403,95 +556,37 @@ void simplesine_tilde_setup(void)
                                (t_newmethod)simplesine_new,
                                (t_method)simplesine_free, sizeof(t_simplesine),
                                CLASS_DEFAULT, A_GIMME, 0);
-  class_addmethod(simplesine_class, (t_method)simplesine_dsp, gensym("dsp"),0);
+
+  class_addmethod(simplesine_class, (t_method)simplesine_dsp, gensym("dsp"),
+                  0);
   CLASS_MAINSIGNALIN(simplesine_class, t_simplesine, x_f);
 
-  class_addmethod(simplesine_class, (t_method)sinebasic, gensym("sine"),0);
+  // change the waveform
+  class_addmethod(simplesine_class, (t_method)sinebasic, gensym("sine"), 0);
   class_addmethod(simplesine_class, (t_method)trianglebasic,
-                  gensym("triangle"),0);
+                  gensym("triangle"), 0);
   class_addmethod(simplesine_class, (t_method)sawtoothbasic,
-                  gensym("sawtooth"),0);
-  class_addmethod(simplesine_class, (t_method)squarebasic, gensym("square"),0);
+                  gensym("sawtooth"), 0);
+  class_addmethod(simplesine_class, (t_method)squarebasic, gensym("square"),
+                  0);
 
-  // additive synthesis method
+  // additive synthesis methods
   class_addmethod(simplesine_class, (t_method)simplesine_list, gensym("list"),
                   A_GIMME, 0);
+  class_addmethod(simplesine_class, (t_method)simplesine_sin, gensym("sin"),
+                  A_GIMME, 0);
+  class_addmethod(simplesine_class, (t_method)simplesine_tri, gensym("tri"),
+                  A_GIMME, 0);
+  class_addmethod(simplesine_class, (t_method)simplesine_saw, gensym("saw"),
+                  A_GIMME, 0);
+  class_addmethod(simplesine_class, (t_method)simplesine_sqr, gensym("sqr"),
+                  A_GIMME, 0);
+
+  // feedback methods
+  class_addmethod(simplesine_class, (t_method)simplesine_fbamp,
+                  gensym("fbamp"), A_GIMME, 0);
+  class_addmethod(simplesine_class, (t_method)simplesine_fbtime,
+                  gensym("fbtime"), A_GIMME, 0);
 
   post(version);
 }
-
-// // all for additive synthesis with non-sine waves, decided not to implement
-// // it, hence the comment
-// void sawtoothadd(t_simplesine *x, int harmonic, float amp)
-// {
-//   for(int i = 0; i < x->table_length; i++)
-//     {
-//       float saw = (float)harmonic * i / (float)x->table_length;
-//       //post("%f", saw);
-//       saw *= amp;
-//       x->wavetable[i] += saw;
-//     }
-// }
-//
-// void squareadd(t_simplesine *x, int harmonic, float amp)
-// {
-//   for(int i = 0; i < x->table_length; i++)
-//     {
-//       float sqr = 0;
-//       if((float) harmonic * i > x->table_length/2)
-//         {
-//           sqr = 1.0;
-//         }
-//       else
-//         {
-//           sqr = 0.0;
-//         }
-//       //post("%f", sqr);
-//       sqr *= amp;      
-//       int in = (i * harmonic) % x->table_length;
-//       x->wavetable[i] += sqr;
-//     }
-// }
-//
-// void triangleadd(t_simplesine *x, int harmonic, float amp)
-// {
-//   for(int i = 0; i < x->table_length; i++)
-//     {
-//       float tri = 0;
-//       if((float) harmonic * i < x->table_length/2)
-//         {
-//           tri = (float) harmonic * (float)i / ((float)x->table_length);
-//         }
-//       else
-//         {
-//           tri = (1 - ((float) harmonic * (float)i / ((float)x->table_length)));
-//           // 0.5 + = cheap way to 'normalize'
-//         }
-//       //post("%f", tri);
-//       tri *= amp;
-//       x->wavetable[i] += tri;
-//     }
-//   /*implement normalization*/
-//   float max = 0.0, rescale;
-//
-//   for(int j = 0; j < x->table_length; j++)
-//     {
-//       if(max < fabs(x->wavetable[j]))
-//         {
-//           max = fabs(x->wavetable[j]);
-//           // post("%f", max);
-//         }
-//     }
-//
-//   if(max == 0.0) //avoid divide by zero
-//     {
-//       return;
-//     }
-//
-//   rescale = 1.0 / max ;
-//
-//   for(int k = 0; k < x->table_length; k++)
-//     {
-//       x->wavetable[k] *= rescale ;
-//     }
-// }
