@@ -2,7 +2,7 @@
 #### Code for HMU510 at Stevens Institute of Technology
 HMU 510 - Audio Programming
 
-# Licence
+# License
 Copyright 2017 Brian Voyer
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
