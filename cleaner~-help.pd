@@ -1,0 +1,30 @@
+#N canvas 727 139 649 302 10;
+#X obj 60 25 osc~ 440;
+#X obj 122 25 noise~;
+#X obj 60 65 +~;
+#X obj 60 88 rfft~;
+#X obj 60 186 rifft~;
+#X obj 60 215 dac~;
+#X obj 60 158 cleaner~;
+#X obj 112 111 sig~ 0.5;
+#X msg 112 89 0.4;
+#X obj 174 111 sig~ 0.1;
+#X msg 174 89 0.001;
+#X obj 122 48 *~ 0.3;
+#X text 248 47 [cleaner~] removes spectral components up to the third
+inlet (relative threshold) times the maximum input recieved by multiplying
+them by the fourth inlet (weak bin multiplier).;
+#X connect 0 0 2 0;
+#X connect 1 0 11 0;
+#X connect 2 0 3 0;
+#X connect 3 0 6 0;
+#X connect 3 1 6 1;
+#X connect 4 0 5 0;
+#X connect 4 0 5 1;
+#X connect 6 0 4 0;
+#X connect 6 1 4 1;
+#X connect 7 0 6 2;
+#X connect 8 0 7 0;
+#X connect 9 0 6 3;
+#X connect 10 0 9 0;
+#X connect 11 0 2 1;
