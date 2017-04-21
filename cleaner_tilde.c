@@ -1,5 +1,6 @@
 #include "m_pd.h"
 #include <math.h>
+#include <stdlib.h>
 
 static t_class *cleaner_tilde_class;
 
@@ -79,7 +80,7 @@ void cleaner_tilde_dsp(t_cleaner_tilde *x, t_signal **sp)
     {
       x->vecsize = sp[0]->s_n;
       size = x->vecsize * sizeof(float);
-      if(x->mag = NULL)
+      if(x->mag == NULL)
 	{
 	  x->phase = (float *) malloc(size);
 	  x->mag =  (float *) malloc(size);
@@ -108,7 +109,7 @@ void *cleaner_tilde_new(t_floatarg f)
   outlet_new(&x->x_obj, &s_signal);
   outlet_new(&x->x_obj, &s_signal);
 
-  x->vecsize = 0;
+  x->vecsize = 64; // just give it something to start with
   x->mag = NULL;
 
   return (void *)x;
