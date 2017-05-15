@@ -1,0 +1,52 @@
+#N canvas 272 228 463 463 10;
+#X obj 12 93 rfft~;
+#X obj 12 145 rifft~;
+#X obj 12 218 dac~;
+#X obj 154 154 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+1;
+#X obj 154 206 tabwrite~ arr1;
+#N canvas 0 22 450 278 (subpatch) 0;
+#X array arr1 1000 float 4;
+#X coords 0 1 999 -1 200 140 1 0 0;
+#X restore 250 19 graph;
+#X obj 154 132 loadbang;
+#X obj 154 173 metro 50;
+#X obj 12 71 readsf~;
+#X msg 34 42 stop;
+#X msg 12 20 open voice.wav \, start;
+#X msg 256 173 \; pd dsp 1;
+#X obj 12 189 *~ 0.015625;
+#X text 12 243 [groan]: makes things sound like groans.;
+#X msg 117 100 downtune 1;
+#X msg 117 80 downtune 0;
+#X obj 12 117 groan~ cool;
+#X obj 18 368 groan~;
+#X obj 18 392 groan~ cool;
+#X msg 189 80 phase 0;
+#X msg 189 100 phase 85;
+#X text 15 257 it does some combination of downtuning your signal by
+throwing away low frequency components and pretending the higher components
+are the lower ones and modifying the phase of the signal by modulating
+it in the frequency domain. doing [groan cool] makes it do cooler phase
+stuff (it actually doesn't care if you say "cool" \, that's how cool
+it is) (c) brian voyer <brianvoyer@gmail.com> 2017 and all that stuff
+;
+#X connect 0 0 16 0;
+#X connect 0 1 16 1;
+#X connect 1 0 12 0;
+#X connect 3 0 7 0;
+#X connect 6 0 3 0;
+#X connect 6 0 11 0;
+#X connect 7 0 4 0;
+#X connect 8 0 0 0;
+#X connect 9 0 8 0;
+#X connect 10 0 8 0;
+#X connect 12 0 4 0;
+#X connect 12 0 2 1;
+#X connect 12 0 2 0;
+#X connect 14 0 16 0;
+#X connect 15 0 16 0;
+#X connect 16 0 1 0;
+#X connect 16 1 1 1;
+#X connect 19 0 16 0;
+#X connect 20 0 16 0;
